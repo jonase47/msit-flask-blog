@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from flask import Flask, redirect, render_template, request, url_for
+from flask import Flask, abort, redirect, render_template, request, url_for
 
 app = Flask(__name__)
 
@@ -24,6 +24,12 @@ def next_id(posts):
     """Nächste freie ID: höchste vorhandene ID + 1 (bei leerer Liste 1)."""
     return max((post["id"] for post in posts), default=0) + 1
 
+
+def fetch_post_by_id(post_id):
+    for post in load_posts():
+        if post["id"] == post_id:
+            return post
+    return None
 
 @app.route('/')
 def index():
@@ -54,6 +60,37 @@ def add():
         return redirect(url_for('index'))
 
     return render_template('add.html')
+
+
+@app.route('/delete/<int:post_id>')
+def delete(post_id):
+    blog_posts = load_posts()
+    remaining = [post for post in blog_posts if post["id"] != post_id]
+
+    if len(remaining) == len(blog_posts):   # nichts entfernt → ID gibt es nicht
+        abort(404)
+
+    save_posts(remaining)
+    return redirect(url_for('index'))
+
+
+@app.route('/update/<int:post_id>', methods=['GET', 'POST'])
+def update(post_id):
+    post = fetch_post_by_id(post_id)
+    if post is None:
+        return "Post not found", 404
+
+    if request.method == 'POST':
+        blog_posts = load_posts()
+        for item in blog_posts:
+            if item["id"] == post_id:
+                item["author"] = request.form.get('author')
+                item["title"] = request.form.get('title')
+                item["content"] = request.form.get('content')
+        save_posts(blog_posts)
+        return redirect(url_for('index'))
+
+    return render_template('update.html', post=post)
 
 
 if __name__ == '__main__':
