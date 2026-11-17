@@ -55,6 +55,7 @@ def add():
             "author": author,
             "title": title,
             "content": content,
+            "likes": 0,
         })
         save_posts(blog_posts)
         return redirect(url_for('index'))
@@ -91,6 +92,17 @@ def update(post_id):
         return redirect(url_for('index'))
 
     return render_template('update.html', post=post)
+
+
+@app.route('/like/<int:id>')
+def like(id):
+    blog_posts = load_posts()
+    for post in blog_posts:
+        if post["id"] == id:
+            post["likes"] = post.get("likes", 0) + 1
+            save_posts(blog_posts)
+            return redirect(url_for('index'))
+    return "Post not found", 404
 
 
 if __name__ == '__main__':
