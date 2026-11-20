@@ -25,3 +25,11 @@ h1 {
 .post p {
     margin: 10px 0;
 }
+
+.error {
+    color: #B00020;
+}
+
+.inline-form {
+    display: inline;
+}
